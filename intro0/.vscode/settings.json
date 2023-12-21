@@ -1,0 +1,6 @@
+{
+    "python.pythonPath": "/Users/gediminaspazera/.pyenv/shims/python",
+    "vsintellicode.python.completionsEnabled": true,
+    "intellicodeApiExamples.python.enabled": true,
+    "python.defaultInterpreterPath": "/Users/gediminaspazera/.pyenv/shims/python3"
+}
