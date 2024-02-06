@@ -109,16 +109,116 @@ public class Model extends Observable {
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-
-        // TODO: Modify this.board (and perhaps this.score) to account
-        // for the tilt to the Side SIDE. If the board changed, set the
-        // changed local variable to true.
-
+        Board b = board;
+        board.setViewingPerspective(side);
+        for(int k = 0; k < board.size(); k++) {
+            if(moveCol(k)) {
+                changed = true;
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
+    }
+
+    /**
+     * Moves numbers in a column
+     * @param col - column number
+     * @return returns True if anything was moved
+     */
+    public boolean moveCol(int col) {
+        boolean changed = false;
+        int merged = -1;
+        for(int i = 2; i > -1; i = i - 1) {
+            if(board.tile(col,i) == null) {
+                continue;
+            }
+            for(int j = i + 1; j < board.size(); j++) {
+                if(board.tile(col,j) == null) {
+                    if(j == 3) {
+                        board.move(col, j, board.tile(col, i));
+                        changed = true;
+                        break;
+                    }
+                }
+                else if(board.tile(col,j).value() == board.tile(col,i).value()) {
+                    if(merged == j) {
+                            board.move(col,j-1,board.tile(col,i));
+                            changed = true;
+                            break;
+                    }
+                    else {
+                        score = score + board.tile(col,j).value()*2;
+                        board.move(col,j,board.tile(col,i));
+                        changed = true;
+                        merged = j;
+                        break;
+                    }
+                }
+                else {
+                    if(j==i+1) {
+                        break;
+                    }
+                    else{
+                        board.move(col,j-1,board.tile(col,i));
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return changed;
+    }
+
+    public static boolean checkCanMoveUp(Board b, int col, int row) {
+        if(b.tile(col,row) == null) {
+            return false;
+        }
+        else if(row == 3) {
+            return false;
+        }
+
+        if(b.tile(col,row+1) == null) {
+            return true;
+        }
+        else if(b.tile(col,row).value() == b.tile(col,row+1).value()) {
+            return true;
+        }
+
+        return false;
+    }
+    public static int newRowPosition(Board b, int col, int row) {
+       return 0;
+    }
+
+    /** Checks if two numbers can be merged in a given column
+     * @return true if can be merged
+     */
+    public static boolean checkColMerge(Board b, int col) {
+        if(col > b.size()) {
+            return false;
+        }
+
+        for(int j = 0; j < b.size()-1; j++) {
+            if(b.tile(col,j) == null) {
+                continue;
+            }
+            for(int k = j + 1; k < b.size();k++) {
+                if(b.tile(col,k) == null) {
+                    continue;
+                }
+                else if(b.tile(col,j).value() == b.tile(col,k).value()) {
+                    return true;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+        return false;
     }
 
     /** Checks if the game is over and sets the gameOver variable
@@ -137,6 +237,13 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
+        for(int i = 0; i < b.size(); i++) {
+            for(int j = 0; j < b.size(); j++) {
+                if(b.tile(i,j) == null) {
+                    return true;
+                }
+            }
+        }
         // TODO: Fill in this function.
         return false;
     }
@@ -147,9 +254,50 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        for(int i = 0; i < b.size(); i++) {
+            for(int j = 0; j < b.size(); j++) {
+                if(b.tile(i,j) == null) {
+                    continue;
+                }
+                else if(b.tile(i,j).value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
+
+    /**
+     * Checks if there are two adjacent tiles that are equals
+     * @return true if there are adjacent tiles
+     */
+    public static boolean adjacentExists(Board b) {
+        for(int i = 0; i < b.size(); i++) {
+            for(int j = 0; j < b.size(); j++) {
+                if(b.tile(i,j) == null) {
+                    continue;
+                }
+                else if(i<3){
+                    if(b.tile(i+1,j) == null) {
+                        continue;
+                    }
+                    else if(b.tile(i,j).value() == b.tile(i+1,j).value()){
+                        return true;
+                    }
+                }
+                else if(j<3){
+                    if(b.tile(i,j+1) == null) {
+                        continue;
+                    }
+                    else if(b.tile(i,j).value() == b.tile(i,j+1).value()){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Returns true if there are any valid moves on the board.
@@ -158,7 +306,12 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        if(emptySpaceExists(b)) {
+            return true;
+        }
+        if(adjacentExists(b)) {
+            return true;
+        }
         return false;
     }
 
